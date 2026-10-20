@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: event-processor-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/eventsdb}
+    username: ${DB_USERNAME:bank}
+    password: ${DB_PASSWORD:bank}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:            
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+    listener:
+      ack-mode: record   # commit the offset after each successfully handled record
+
+app:
+  kafka:
+    topic: banking.transactions
+    dlt-topic: banking.transactions.DLT
+  notification:
+    # Demo switch: an event with exactly this amount makes the notification consumer fail,
+    # to watch retries and dead-letter topic in action.
+    poison-amount: ${NOTIFICATION_POISON_AMOUNT:666.66}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
